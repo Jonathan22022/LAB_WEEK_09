@@ -9,6 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -147,7 +150,16 @@ fun Home(navigateFromHomeToResult: (String) -> Unit) {
                 inputField.value = Student("")
             }
         },
-        { navigateFromHomeToResult(listData.toList().toString()) }
+        {
+            val moshi = Moshi.Builder()
+                .add(KotlinJsonAdapterFactory())
+                .build()
+            val type = Types.newParameterizedType(List::class.java, Student::class.java)
+            val adapter = moshi.adapter<List<Student>>(type)
+            val json = adapter.toJson(listData.toList())
+
+            navigateFromHomeToResult(json)
+        }
     )
 }
 
@@ -224,14 +236,28 @@ fun HomeContent(
 //then displays the value of listData to the screen
 @Composable
 fun ResultContent(listData: String) {
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+    val type = Types.newParameterizedType(List::class.java, Student::class.java)
+    val adapter = moshi.adapter<List<Student>>(type)
+
+    val students = remember(listData) {
+        adapter.fromJson(listData) ?: emptyList()
+    }
+
     Column(
         modifier = Modifier
             .padding(vertical = 4.dp)
             .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//Here, we call the OnBackgroundItemText UI Element
-        OnBackgroundItemText(text = listData)
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(students) { student ->
+                OnBackgroundItemText(text = student.toString())
+            }
+        }
     }
 }
 
