@@ -188,10 +188,8 @@ fun HomeContent(
                 )
                 Row {
                     PrimaryTextButton(
-                        text = stringResource(
-                            id =
-                                R.string.button_click
-                        )
+                        text = stringResource(id = R.string.button_click),
+                        enabled = inputField.name.isNotBlank()
                     ) {
                         onButtonClick()
                     }
